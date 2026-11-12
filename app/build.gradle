@@ -1,0 +1,55 @@
+plugins {
+    id 'com.android.application'
+}
+
+// La dirección de la aplicación web de Google Apps Script llega desde GitHub Actions
+// (se pega en el formulario "Run workflow"). Solo se aceptan caracteres de URL normales.
+def webAppUrl = (System.getenv("WEB_APP_URL") ?: "").trim().replaceAll('[^A-Za-z0-9:/._?=&%~-]', '')
+def runNumber = Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER") ?: "1")
+
+android {
+    namespace 'com.bidwarhome.tv'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.bidwarhome.tv"
+        minSdk 22
+        targetSdk 34
+        versionCode runNumber
+        versionName "1.0." + runNumber
+        buildConfigField "String", "WEB_APP_URL", "\"" + webAppUrl + "\""
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    signingConfigs {
+        bidwar {
+            storeFile file('bidwar.keystore')
+            storePassword 'bidwarhome'
+            keyAlias 'bidwar'
+            keyPassword 'bidwarhome'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.bidwar
+        }
+        debug {
+            signingConfig signingConfigs.bidwar
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
