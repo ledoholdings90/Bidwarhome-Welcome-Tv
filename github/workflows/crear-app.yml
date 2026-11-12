@@ -1,0 +1,50 @@
+name: Crear app Bidwar Home
+
+on:
+  workflow_dispatch:
+    inputs:
+      web_app_url:
+        description: "Enlace de la aplicación web de Google Apps Script (el que termina en /exec)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Compilar la app
+        env:
+          WEB_APP_URL: ${{ inputs.web_app_url }}
+        run: gradle --no-daemon assembleRelease
+
+      - name: Preparar el archivo
+        run: cp app/build/outputs/apk/release/app-release.apk BidwarHome.apk
+
+      - name: Publicar para descargar
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Bidwar Home TV 1.0.${{ github.run_number }}
+          body: "Instala BidwarHome.apk en el Fire TV o Google TV."
+          files: BidwarHome.apk
+          make_latest: true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BidwarHome
+          path: BidwarHome.apk
